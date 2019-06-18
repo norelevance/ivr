@@ -27,13 +27,15 @@ class TwilioController < ApplicationController
       @selection.enqueue(name: 'chef')
     when "2"
       #@selection.say(message: 'Please record your message now.')
-      @selection.record(timeout: 10, method: 'POST', max_length: 20, finish_on_key: '*')
+      @selection.record(timeout: 10, method: 'GET', max_length: 20, finish_on_key: '*')
+    when "*"
+      @selection.hangup
     else
       @selection.say("Returning to the main menu.")
       @selection.hangup
     end
     render xml: @selection.to_s
-    binding.pry
+
   end
 
   def twiml_say(phrase, exit = false)
