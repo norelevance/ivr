@@ -2,6 +2,9 @@ require 'twilio-ruby'
 require 'sanitize'
 
 class TwilioController < ApplicationController
+  def initialize
+    @vr = Twilio::TwiML::VoiceResponse.new
+  end
 
   def index
     render text: "Dial Me."
@@ -20,22 +23,43 @@ class TwilioController < ApplicationController
   # menu_path
   def menu_selection
     user_selection = params[:Digits]
-    @selection = Twilio::TwiML::VoiceResponse.new
+
     case user_selection
     when "1"
-      @selection.say("Placing you into the queue. Please stand by till an agent answers.")
-      @selection.enqueue(name: 'chef')
+      #@selection = Twilio::TwiML::VoiceResponse.new
+      @vr.say(message: "Placing you into the queue. This call will be recorded. Please stand by.")
+      @vr.enqueue(name: 'support')
     when "2"
-      #@selection.say(message: 'Please record your message now.')
-      @selection.record(timeout: 10, method: 'GET', max_length: 20, finish_on_key: '*')
+      @vr.say(message: 'Please record your message now.')
+      @vr.record(timeout: 10, method: 'GET', max_length: 20, finish_on_key: '*')
     when "*"
-      @selection.hangup
+      @vr.say(message: "Your message has been saved. Goodbye.")
+      @vr.hangup
+    when "9"
+      #@vr.say(message: "Connecting you to the caller. Please stand by.")
+      @vr.dial do |dial|
+        dial.queue('support', url: agent_path)
+      end
+      puts "@vr = #{@vr}"
     else
-      @selection.say("Returning to the main menu.")
-      @selection.hangup
+      @vr.say("Returning to the main menu.")
+      @vr.redirect(welcome_path)
     end
-    render xml: @selection.to_s
+    render xml: @vr.to_s
+  end
 
+  def agent
+    @vr.dial do |dial|
+      dial.conference('support')
+    end
+    puts @vr
+    render xml: @vr.to_s
+  end
+
+  def connect
+    @vr.say(message: 'You will now be connected to an agent.')
+    puts @vr
+    render xml: @vr.to_s
   end
 
   def twiml_say(phrase, exit = false)
@@ -51,7 +75,6 @@ class TwilioController < ApplicationController
         r.redirect(welcome_path)
       end
     end
-
     render xml: response.to_s
   end
 end

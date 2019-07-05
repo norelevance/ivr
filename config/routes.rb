@@ -9,7 +9,13 @@ Rails.application.routes.draw do
   # callback for user entry
   match 'ivr/menu' => 'twilio#menu_selection', via: [:get, :post], as: 'menu'
 
-  # callback for planet entry
+  # callback for caller option selection
   match 'ivr/options' => 'twilio#option_selection', via: [:get, :post], as: 'options'
+
+  #callback for dialing a enqueue
+  match 'ivr/agent' => 'twilio#agent', via: [:get, :post], as: 'agent'
+
+  #callback for connect message to Caller
+  match 'ivr/connect' => 'twilio#connect', via: [:get, :post], as: 'connect'
 
 end
